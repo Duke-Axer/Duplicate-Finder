@@ -1,6 +1,6 @@
 """Przygotowuje środowisko do pracy"""
 import os
-import settings
+from scripts import settings
 import numpy as np
 
 
@@ -18,7 +18,7 @@ for i in folderList:
         os.makedirs(i)
 if not os.path.isfile(settings.PathFile.config_p):
             with open(settings.PathFile.config_p, "w") as file:
-                file.write("path: \nsimilarity: 0.85")
+                file.write("path: \nsimilarity: 0.95")
 
 if not os.path.isfile(settings.PathFile.p_good+".npy"):
     data = np.array([], dtype=settings.dtype_good)
@@ -26,4 +26,3 @@ if not os.path.isfile(settings.PathFile.p_good+".npy"):
 if not os.path.isfile(settings.PathFile.p_bad+".npy"):
     data = np.array([], dtype=settings.dtype_bad)
     np.save(settings.PathFile.p_bad+".npy", data)
-print('wykonano init')

@@ -2,96 +2,158 @@
 przedstawienie użytkownikowi podobnych do siebie obrazów"""
 
 import os
-import settings
+from scripts.batch import Batch
+from scripts import settings
 import numpy as np
 import shutil
+
+class Duplicat():
+    def __init__(self, batch_name, number):
+        self.batch_name = batch_name
+        self.number = number
+        self.list_dup = []
+        """[(nazwa serii, numer obrazu, sim), ...]"""
+
+    def exist(self, batch_name, number):
+        """Zwraca informacje czy dane zdjecie istnieje już w liście lub jest z tego obiektu"""
+        if self.batch_name == batch_name and self.number == number:
+            return True
+        
+        if any(elem[:2] == (batch_name, number) for elem in self.list_dup if len(elem) >= 2):
+            return True
+        return False
+    
+    def add(self, name, number, sim):
+        """Dodaje nazwę serii i numer obrazu, który jest podobny do tego z obiektu"""
+        if not self.exist(name, number):
+            self.list_dup.append((name, number, sim))
+
+
+
 ## Wszystko do poprawy, inne dane wejściowe
 class Show():
+    """Biblioteka wyświetlająca informacje o duplikatach
+    
+    :param list[[file1, file2, [img0, (img1, sim)]], ...] input_info: Wejściowe informacje o duplikatach"""
     input_info:list[list] = []
     """Wejściowe informacje o duplikatach, zawiera 
     [
     [file1, file2, [img0, (img1, sim)]], ...
     ]"""
-    @staticmethod
-    def add_duplicates(new_list):
-        """Funkcja do dopisywania do listy duplikatów"""
-        Show.input_info.append(new_list)
+
+    list_dup_obj: list[Duplicat] | None = None
+    @classmethod
+    def add_duplicates(cls, new_list):
+        """Funkcja do dopisywania do listy duplikatów, dodatkowo sprawdza, czy już istnieją"""
+        if not cls.list_dup_obj:
+            cls.list_dup_obj = []
+            cls.list_dup_obj.append(cls.create_dup_obj(new_list))
+            return
+        
+        for el in cls.list_dup_obj:
+            if el.batch_name == new_list[0] and el.number == new_list[1]:
+                if not el.exist(new_list[2], new_list[3]):
+                    el.add(new_list[2], new_list[3], new_list[4])
+                    break
+        else:
+            cls.list_dup_obj.append(cls.create_dup_obj(new_list))
+
+    @classmethod
+    def create_dup_obj(cls, new_list):
+        """Tworzy obiekt duplikatu"""
+        dup = Duplicat(new_list[0], new_list[1])
+        dup.add(new_list[2], new_list[3], new_list[4])
+        return dup
+
+        
     @staticmethod
     def remove_duplicates(delete):
         """Funkcja do usuwania z listy duplikatów"""
         del Show.input_info[delete]
     @staticmethod
     def return_path(list_dup):
-        """Zwraca listę ścieżek powiązanych z listą"""
+        """Zwraca listę ścieżek powiązanych z listą
+        
+        :param [file1, file2, [img0, (img1, sim)]] list_dup: Informacje o duplikatach
+        :return list_path: lista ścieżek do obrazów"""
         list_path = []
-        for row in np.load(list_dup[0]+"p.npy"):
-            print(list_dup)
-            print(list_dup[2])
-            print(row['no'])
+        path = Batch.type_batch_to_int_from_str(list_dup[0])
+        path = Batch.type_batch_to_path(path)
+        batch_number = Batch.return_batch_number(list_dup[0])
+        for row in np.load(path+batch_number+"p.npy"):
             if row['no'] == np.uint8(list_dup[2]):
                 list_path.append(row['path'])
                 break
         for index, _ in list_dup[3:]:
-            for row in np.load(list_dup[1]+"p.npy"):
+            path = Batch.type_batch_to_int_from_str(list_dup[1])
+            path = Batch.type_batch_to_path(path)
+            batch_number = Batch.return_batch_number(list_dup[1])
+            for row in np.load(path+batch_number+"p.npy"):
                 if np.uint8(index) == row['no']:
                     list_path.append(row['path'])
                     break
         return list_path
 
     @staticmethod
-    def create_filetxt(path, list_dup, list_path_dup):
-        """Tworzy plik tekstowy z informacjami"""
-        with open(os.path.join(path,"info.txt"), "w") as f:
-            f.write(str(os.path.basename(list_dup[0]))+ str(list_dup[2]) + ": "+list_path_dup[0]+"\n")
-        Show.add_to_filetxt(path, list_dup, list_path_dup)
+    def create_filetxt(path, path_img, batch_name, number):
+        """Tworzy plik tekstowy z informacjami o duplikatach.
+
+        :param str path: Ścieżka do katalogu
+        :param str path_img: ścieżka do pliku image
+        :param str batch_name: Nazwa serii
+        :param int number: Nimer obrazu w serii"""
+        with open(os.path.join(path,"info.txt"), "w", encoding='utf-8') as f:
+            f.write(f'{batch_name}:{str(number)}: {path_img}\n')
+
     @staticmethod
-    def add_to_filetxt(path, list_dup, list_path_dup):
-        """Dopisuje do pliku tekstowego"""
-        with open(os.path.join(path,"info.txt"), "a") as f:
-            var = 1
-            for index, sim in list_dup[3:]:
-                f.write("{}: {} = {} \n".format(
-                    str(os.path.basename(list_dup[1]))+str(index), list_path_dup[var], sim))
-                var +=1
+    def add_to_filetxt(path_cat, path_img, dup):
+        """Dopisuje informacje o duplikatach do pliku tekstowego.
+
+        :param str path_cat: Ścieżka do katalogu
+        :param str path_img: Ścieżka do obrazu
+        :param list[name, number, sim] dup: Informacje o podobnieństwie"""
+        with open(os.path.join(path_cat,"info.txt"), "a", encoding='utf-8') as f:
+                f.write("{}:{}: {} = {} \n".format(
+                    dup[0], str(dup[1]), path_img, dup[2]))
+
     @staticmethod
     def create_catalog(file, index):
-        """Tworzy katalog związany z danym obrazem, który posiada duplikaty"""
-        name = os.path.basename(file)
-        path_dup = os.path.join(settings.PathFile.duplicates, name+ "x"+ str(index))
+        """Tworzy katalog związany z danym obrazem, który posiada duplikaty
+
+        :param int index: Index obrazu w serii.
+        :param str file: Nazwa pliku serii, który zawiera sprawdzony obraz.
+        :return path_dup: Ścieżka do katalogu"""
+        path_dup = os.path.join(settings.PathFile.duplicates, f'{file}x{str(index)}')
         if os.path.exists(path_dup):
-            for filename in os.listdir(path_dup):
-                file_path = os.path.join(path_dup, filename)
-                try:
-                    if os.path.isfile(file_path) or os.path.islink(file_path):
-                        os.unlink(file_path)
-                    elif os.path.isdir(file_path):
-                        shutil.rmtree(file_path)
-                except:
-                    print(path_dup)
-        else:
-            os.mkdir(path_dup)
+            shutil.rmtree(path_dup)
+        os.mkdir(path_dup)
         return path_dup
     
     @staticmethod
-    def copy_images(path_to_save, list_dup, list_paths_dup):
-        """Zopiuje obrazy do folderu"""
-        print(str(os.path.basename(list_dup[0]))+str(list_dup[2]))
-        _, type_f = os.path.splitext(list_paths_dup[0])
-        shutil.copy(list_paths_dup[0], os.path.join(path_to_save, 
-                    str(os.path.basename(list_dup[0]))+str(list_dup[2]))+type_f)
-        var = 1
-        for index, _ in list_dup[3:]:
-            _, type_f = os.path.splitext(list_paths_dup[var])
-            shutil.copy(list_paths_dup[var], os.path.join(path_to_save, 
-                        str(os.path.basename(list_dup[1]))+str(index))+type_f)
+    def copy_images(path_dir, path_img, name_batch, number):
+        """Zapiuje obrazy do folderu
+        
+        :param str path_dir: Ścieżka do katalogu
+        :param str path_img: Ścieżka do obrazu
+        :param str name_batch: Nazwa serii.
+        :param int number: Numer obrazu w serii.
+        """
+        _, type_f = os.path.splitext(path_img)
+        shutil.copy(path_img, os.path.join(path_dir, name_batch+' '+str(number)+type_f))
 
-    @staticmethod
-    def loop__all_dup():
+    @classmethod
+    def loop_all_dup(cls):
         """wykonyje dla wszystkich plików zapisanych w input_info"""
-        for list_dup in Show.input_info:
-            list_paths_dup = Show.return_path(list_dup)
-            path_to_save = Show.create_catalog(os.path.basename(list_dup[0]), list_dup[2])
-            print(path_to_save)
-            Show.create_filetxt(path_to_save, list_dup, list_paths_dup)
-            Show.copy_images(path_to_save, list_dup, list_paths_dup)
+        
+        for dup in cls.list_dup_obj:
+            path_cat = Show.create_catalog(dup.batch_name, dup.number)
+            path_img = Batch.return_path_img(dup.batch_name, dup.number)
+            Show.create_filetxt(path_cat, path_img, dup.batch_name, dup.number)
+            Show.copy_images(path_cat, path_img, dup.batch_name, dup.number)
+            for dup_2 in dup.list_dup:
+                path_img = Batch.return_path_img(dup_2[0], dup_2[1])
+                cls.add_to_filetxt(path_cat, path_img, dup_2)
+                Show.copy_images(path_cat, path_img, dup_2[0], dup_2[1])
+
+
 

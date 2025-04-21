@@ -1,6 +1,7 @@
 scripts/__pycache__/
 Data/
 venv/
-Another/sprawdzenie pliku.docx
+Another/
 build/
 dist/
+Duplicate finder.spec

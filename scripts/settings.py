@@ -1,8 +1,7 @@
-from enum import Enum
 import os
 import numpy as np
 
-dtype_good=np.dtype([('path', 'U256'), ('check', np.uint8), ('batch', np.uint8), ('no', np.uint8)])
+dtype_good=np.dtype([('path', 'U512'), ('check', np.uint8), ('batch', np.uint16), ('no', np.uint8)])
 """Typ danych przechwywanych w tablicy poprawnych ścieżek
 check: 
     0 - nowy plik 
@@ -12,7 +11,7 @@ check:
 batch - nazwa pliku serii (numer)
 no    - numer w pliku serii
 """
-dtype_bad=np.dtype([('path', 'U256')])
+dtype_bad=np.dtype([('path', 'U512')])
 """Typ danych przechwywanych w tablicy pomijanych ścieżek"""
 
 class FolderName():
@@ -35,6 +34,10 @@ class FileName():
     paths_new = 'P_n'
     paths_bad = 'P_B'
 
+np_type = '.npy'
+"""Sufiks plików numpy"""
+path_id = 'p'
+"""Sufiks plików ze ścieżkami, bez sufiksu plików numpy"""
 
 class PathFile():
     """Zawiera ścieżki do plików lub katalogu, w którym powinny się znajdować"""
@@ -56,7 +59,7 @@ class Config():
 
     @staticmethod
     def _read_settings():
-        """Odczytuje ustawienia programu"""
+        """Odczytuje ustawienia programu z pliku txt"""
         with open(PathFile.config_p, 'r') as file:
             for line in file:
                 line = line.strip()

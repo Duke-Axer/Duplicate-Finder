@@ -1,4 +1,4 @@
-import duplicate_finder_cmd
+from scripts import duplicate_finder_cmd
 
 
 def main():

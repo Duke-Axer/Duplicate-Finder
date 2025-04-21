@@ -1,17 +1,14 @@
-import settings
-import init
-import archive
-import similarity
-import batch
-import show
-import os
+import scripts.settings as s
+from scripts import init, archive, similarity
+from scripts.batch import Batch
+from scripts.show import Show
 import argparse
 
 import numpy as np
 
 
 def main():
-    settings.Config._read_settings()
+    s.Config._read_settings()
     init
     arg= cmd()
     if arg.add_new:
@@ -20,76 +17,72 @@ def main():
         make_new_batchs()
     if arg.compare:
         compare()
+
     #add_new()
     #make_new_batchs()
-    #test()
     #compare()
-    #test()
 
 def make_new_batchs():
     """Tworzy nowe serie z nowych ścieżek"""
     catalog = archive.Archive()
-    catalog.search_new_file()
     while True:
         batch_img = catalog.make_new_batch()
         if batch_img.size == 0:
-            return
+            break
         batch_features, images_info= similarity.Similarity.images_to_vectors(batch_img)
-        manage_files = batch.Batch(batch_features, images_info)
-        manage_files.save_batch(images_info)
-        catalog.save_list_files_to_npy(manage_files.batch_info)
+        manage_files = Batch(batch_features, images_info)
+        manage_files.save_batch()
+        catalog.save_list_files_to_npy_new(manage_files.batch_info)
+    print('\r\033[33mZakończono tworzenie nowych serii\033[0m')
 
-def test():
-    seria = np.load("Data\\batch\\b_n1p.npy")
-    print(seria)
+
+def __save_list_of_similary(show_obj: Show, list_of_similary: list):
+    """Funkcja zajmuje się obsługą obiektu Show
+    
+    :param Show show_obj: Obiekt klasy Show.
+    :param list list_of_similary: Lista w postaci: [['b_n1', int(num_1) 'b_n2', int(num_2), sim], ...]
+    """
+    if not list_of_similary:
+        return
+    print('\r\033[91mSeria zawiera obrazy do siebie podobne:\033[0m')
+    for i in list_of_similary:
+        print('\r\033[91m{}: {} {}: {} podobieństwo: {}\033[0m'.format(i[0],i[1],i[2],i[3],float(i[4])))
+        show_obj.add_duplicates(i)
 
 def compare():
     """Sprawdza, czy występują duplikaty. Aktualizuje informacje o serii"""
-    catalog = archive.Archive()
-    show_obj = show.Show()
-    batch.Batch.create_list_batch()
-    for file in batch.Batch.list_batch[0]:
-        batch_1 = batch.Batch(name=file) #tworzenie obiektu
-        sim = similarity.Similarity(batch_features= batch_1.batch_features)
-        sim.create_matrix()
-        list_of_similary= sim.compare()
-        print(f"{file}: {list_of_similary}")
-        for i in list_of_similary:
-            print([os.path.basename(file), os.path.basename(file)] + i)
-            show_obj.add_duplicates([file, file] + i)
-        print(batch.Batch.convert_list_of_similary(list_of_similary))
-        batch_1.update_check_num(batch.Batch.convert_list_of_similary(list_of_similary), np.uint8(2))
-        batch_1.save_batch(batch_info=batch_1.batch_info)
-    print('wykonywanie testu a')
-    for file in batch.Batch.list_batch[1]:
+    show_obj = Show()
+    print("\r\033[33m   Sprawdzanie plików N\033[0m")
+    for file in Batch.list_batch[0]:
+        batch_1 = Batch(name=s.FileName.batch_new+file)
+        print(f"\r\033[33mSprawdzanie pliku {batch_1.name} N\033[0m")
+        sim = similarity.Similarity(batch_1)
+        list_of_similary= sim.create_matrix()
+        __save_list_of_similary(show_obj, list_of_similary)
+        batch_1.update_check_num(Batch.convert_list_of_similary(list_of_similary), np.uint8(2))
         
-        batch_1 = batch.Batch(name=file) #tworzenie obiektu
+    print("\r\033[33m   Sprawdzanie plików ST\033[0m")
+    Batch.list_batch_set(2)
+    for file in Batch.list_batch[1]:
+        batch_1 = Batch(name=s.FileName.batch_self_tested+file) #tworzenie obiektu
+        print(f"\r\033[33mSprawdzanie pliku {batch_1.name} ST\033[0m")
         all_list_of_similary= []
-        for file_a in batch.Batch.list_batch[2]:
-            batch_2 = batch.Batch(name=file_a)
-            sim = similarity.Similarity(batch_features= batch_1.batch_features, )
-            sim.create_matrix(batch_2.batch_features)
-            list_of_similary= sim.compare()
-            for i in list_of_similary:
-                
-                print([os.path.basename(file), os.path.basename(file_a)] + i)
-                show_obj.add_duplicates([file, file] + i)
-            for i in list_of_similary:
-                all_list_of_similary.append(i)
-        print(f"{file}: {all_list_of_similary}")
-        print(batch.Batch.convert_list_of_similary(all_list_of_similary))
-        print(batch_1.batch_info)
-        batch_1.update_check_num(batch.Batch.convert_list_of_similary(all_list_of_similary), np.uint8(3))
-        print(batch_1.batch_info)
-        batch_1.save_batch(batch_info=batch_1.batch_info)
-    print("wynik")
-    print(show_obj.input_info)
-    show_obj.loop__all_dup()
+
+        Batch.list_batch_set(3)
+        for file_a in Batch.list_batch[2]:
+            batch_2 = Batch(name=s.FileName.batch_archive+file_a)
+            sim = similarity.Similarity(batch_1)
+            list_of_similary= sim.create_matrix(batch_2)
+            __save_list_of_similary(show_obj, list_of_similary)
+            all_list_of_similary.extend(list_of_similary)
+        batch_1.update_check_num(Batch.convert_list_of_similary(all_list_of_similary), np.uint8(3))
+    show_obj.loop_all_dup()
 
 def add_new():
     """Wyszukuje i dodaje nowe ścieżki do listy ścieżek"""
     catalog = archive.Archive()
     catalog.search_new_file()
+    print('\r\033[33mZakończono dodawanie ścieżek\033[0m')
 
 def cmd():
     parser = argparse.ArgumentParser(description="Przykład użycia argparse")
