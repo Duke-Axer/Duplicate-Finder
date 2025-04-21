@@ -1,6 +1,6 @@
 # Duplicate Finder
 
-**Zastosowanie**: Głównym celem projektu jest optymalizacja wykorzystania pamięci w graficznych bazach danych poprzez analizę podobieństwa cosinusowego wektorów cech obrazów. Umożliwia identyfikację duplikatów, co prowadzi do efektywniejszego zarządzania zasobami.
+**Zastosowanie**: Głównym celem projektu jest optymalizacja wykorzystania pamięci w graficznych bazach danych poprzez analizę podobieństwa cosinusowego wektorów cech obrazów. Umożliwia identyfikację duplikatów (obrazów bardzo do siebie podobnych), co prowadzi do efektywniejszego zarządzania zasobami.
 
 **Program** W chwili obecnej program przeszukuje obrazy w katalogu, do którego ścieżka została zapisana w pliku 'Data\settings.txt'. 
 
