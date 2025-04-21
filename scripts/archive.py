@@ -157,7 +157,6 @@ class Archive():
         except UnboundLocalError:
             print('Brak nowych plików')
             return
-        print(f"\r\033[32mPliki analizowane: {var}\033[0m")
         self.patch_good_npy = np.array(list(all_path.values()), dtype=s.dtype_good)
         Archive.save_numpy(s.PathFile.p_good+s.np_type, self.patch_good_npy)
         
