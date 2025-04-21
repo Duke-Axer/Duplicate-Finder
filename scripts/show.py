@@ -8,6 +8,7 @@ import numpy as np
 import shutil
 
 class Duplicat():
+    """Przechowuje informacje o duplikatach określonego zdjęcia"""
     def __init__(self, batch_name, number):
         self.batch_name = batch_name
         self.number = number
@@ -29,19 +30,11 @@ class Duplicat():
             self.list_dup.append((name, number, sim))
 
 
-
-## Wszystko do poprawy, inne dane wejściowe
 class Show():
-    """Biblioteka wyświetlająca informacje o duplikatach
-    
-    :param list[[file1, file2, [img0, (img1, sim)]], ...] input_info: Wejściowe informacje o duplikatach"""
-    input_info:list[list] = []
-    """Wejściowe informacje o duplikatach, zawiera 
-    [
-    [file1, file2, [img0, (img1, sim)]], ...
-    ]"""
-
+    """Biblioteka wyświetlająca informacje o duplikatach"""
     list_dup_obj: list[Duplicat] | None = None
+    """Lista obiektów, gdzie każdy obiekt zawiera listę duplikatów"""
+
     @classmethod
     def add_duplicates(cls, new_list):
         """Funkcja do dopisywania do listy duplikatów, dodatkowo sprawdza, czy już istnieją"""
@@ -64,35 +57,6 @@ class Show():
         dup = Duplicat(new_list[0], new_list[1])
         dup.add(new_list[2], new_list[3], new_list[4])
         return dup
-
-        
-    @staticmethod
-    def remove_duplicates(delete):
-        """Funkcja do usuwania z listy duplikatów"""
-        del Show.input_info[delete]
-    @staticmethod
-    def return_path(list_dup):
-        """Zwraca listę ścieżek powiązanych z listą
-        
-        :param [file1, file2, [img0, (img1, sim)]] list_dup: Informacje o duplikatach
-        :return list_path: lista ścieżek do obrazów"""
-        list_path = []
-        path = Batch.type_batch_to_int_from_str(list_dup[0])
-        path = Batch.type_batch_to_path(path)
-        batch_number = Batch.return_batch_number(list_dup[0])
-        for row in np.load(path+batch_number+"p.npy"):
-            if row['no'] == np.uint8(list_dup[2]):
-                list_path.append(row['path'])
-                break
-        for index, _ in list_dup[3:]:
-            path = Batch.type_batch_to_int_from_str(list_dup[1])
-            path = Batch.type_batch_to_path(path)
-            batch_number = Batch.return_batch_number(list_dup[1])
-            for row in np.load(path+batch_number+"p.npy"):
-                if np.uint8(index) == row['no']:
-                    list_path.append(row['path'])
-                    break
-        return list_path
 
     @staticmethod
     def create_filetxt(path, path_img, batch_name, number):

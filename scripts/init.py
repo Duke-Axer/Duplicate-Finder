@@ -1,4 +1,4 @@
-"""Przygotowuje środowisko do pracy"""
+"""Tworzy folder gdzie będą wszystkie informacje"""
 import os
 from scripts import settings
 import numpy as np
@@ -18,7 +18,7 @@ for i in folderList:
         os.makedirs(i)
 if not os.path.isfile(settings.PathFile.config_p):
             with open(settings.PathFile.config_p, "w") as file:
-                file.write("path: \nsimilarity: 0.95")
+                file.write("path: C:\\DB.NKN\nsimilarity: 0.98")
 
 if not os.path.isfile(settings.PathFile.p_good+".npy"):
     data = np.array([], dtype=settings.dtype_good)

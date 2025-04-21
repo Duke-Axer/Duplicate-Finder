@@ -5,13 +5,13 @@ import numpy as np
 from scripts import settings
 from scripts.batch import Batch
 
-
 from sklearn.metrics.pairwise import cosine_similarity
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True #Ładuj uszkodzone pliki
 
 class Similarity():
+    """Klasa odpowiada za wykonanie predykcji cech, analizy podobieństwa itp."""
     _tensorflow_load = False
     image = None
     _tf = None
@@ -19,7 +19,6 @@ class Similarity():
     _model = None
     
     def __init__(self, batch_obj: Batch):
-        
         self.batch_features = batch_obj.batch_features
         """Zawiera tablicę numpy z predykcją cech dla wielu obrazów"""
         self.batch_type = batch_obj.type_batch
@@ -27,7 +26,7 @@ class Similarity():
         self.batch_name = batch_obj.name
         """Zawiera informacje o nazwie serii"""
         self.similarity_matrix = np.array([], np.dtype('float32'))
-        """macierz podobieństwa"""
+        """Macierz podobieństwa"""
 
     @classmethod
     def _load_tensorflow(cls):
@@ -54,7 +53,6 @@ class Similarity():
             cls.predict_batch = predict_batch
             print('\r\033[32mKoniec ładowania\033[0m')
         
-
     @classmethod
     def images_to_vectors(cls, batch_patchs):
         """Funkcja do konwersji zbioru obrazów na wektory cech w partiach
@@ -66,10 +64,7 @@ class Similarity():
         images_array = []
         imgs_data = []
         for var, img_info in enumerate(batch_patchs):
-            
-            img = cls.image.load_img(img_info['path'], target_size=(224, 224))  # Zmiana rozmiaru obrazu
-            
-            
+            img = cls.image.load_img(img_info['path'], target_size=(224, 224))
             images_array.append(cls.image.img_to_array(img))
             imgs_data.append((img_info['path'], 1, 0, var))
 
@@ -79,14 +74,12 @@ class Similarity():
         batch_features = cls.predict_batch(images_array)
         return batch_features, images_info
     
-
     def create_matrix(self, batch_2: Batch | None = None):
         """Tworzy macierz podobieństwa na podstawie jednej serii, gdy nie została przekazana druga seria w argumencie.
         Sprawdza, które image są do siebie podobne.
         
         :return: Zwraca np: [['b_n1', int(num_1) 'b_n2', int(num_2), sim], ...]
         """
-        
         if batch_2 is None:
             batch_2_name = self.batch_name
             self.similarity_matrix = cosine_similarity(self.batch_features)
@@ -98,38 +91,4 @@ class Similarity():
             for j in range(i + 1, len(self.similarity_matrix[i])):
                 if self.similarity_matrix[i][j] >= settings.Config.similarity:
                     similar_images.append((self.batch_name, i, batch_2_name, j, self.similarity_matrix[i, j]))
-        
         return similar_images   
-    
-    def improve_compare_return(self, similarities):
-        """Zwraca informacje bez duplikatów"""
-        similar_images = {}
-
-        # Zbieranie danych w odpowiedni format, unikając powtórzeń
-        for img1, img2, sim in similarities:
-            if img1 not in similar_images:
-                similar_images[img1] = []
-            similar_images[img1].append((img2, sim))
-
-            # Dla img2 sprawdzamy, czy jest już w podobnych obrazach img1
-            if img2 not in similar_images:
-                similar_images[img2] = []
-            similar_images[img2].append((img1, sim))
-
-        # Wyświetlanie wyników z połączeniem podobieństw
-        shown_images = set()  # Zbiór do śledzenia, które obrazy zostały już wyświetlone
-
-        list_of_similary = []
-        for img, similar in similar_images.items():
-            one = []
-            if img not in shown_images:
-                one.append(img)
-                # Dodajemy do listy każdy wynik, nie sortując
-                for img2, sim in similar:
-                    one.append((img2, float(sim)))
-                    shown_images.add(img2)
-                list_of_similary.append(one)
-                shown_images.add(img)
-        return list_of_similary
-
-   

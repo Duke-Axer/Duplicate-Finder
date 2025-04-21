@@ -3,7 +3,6 @@ from scripts import init, archive, similarity
 from scripts.batch import Batch
 from scripts.show import Show
 import argparse
-
 import numpy as np
 
 
@@ -17,10 +16,6 @@ def main():
         make_new_batchs()
     if arg.compare:
         compare()
-
-    #add_new()
-    #make_new_batchs()
-    #compare()
 
 def make_new_batchs():
     """Tworzy nowe serie z nowych ścieżek"""

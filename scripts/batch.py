@@ -16,7 +16,7 @@ class Batch():
     :param list[list] list_batch: Lista id wszystkich plików zawierających serię [[lista n], [lista st], [lista a]]
     :param np.array([]) batch_features: Seria zawierająca cechy obrazów
     :param [('path', 'U512'), ('check', np.uint8), ('batch', np.uint16), ('no', np.uint8)] batch_info: Seria zawierająca informacje o obrazach
-    :param str name: Scieżka do serii, uwzględniajac tylko p: <[p].npy>. np: Data\\batch\\[b_n1].
+    :param str name: Ścieżka do serii, uwzględniajac tylko p: <[p].npy>. np: Data\\batch\\[b_n1].
     :param str batch_num: Numer serii, nie zawiera informoacji o typie serii.
     :param int type_batch: Informacja o typie serii.\n
         1 - wykonana predykcja cech\n
@@ -31,10 +31,10 @@ class Batch():
         
         :param np.array([]) batch_features: Seria zawierająca cechy obrazów
         :param np.array([]) batch_info: Seria zawierająca informacje o obrazach
-        :param str name: Scieżka do serii, nie uwzględniajac <[p].npy>. np: Data\\batch\\b_n1.
+        :param str name: Ścieżka do serii, uwzględniajac tylko p: <[p].npy>. np: Data\\batch\\[b_n1].
         """
         self.name = name
-        """Scieżka do serii, nie uwzględniajac <[p].npy>. np: Data\\batch\\b_n1."""
+        """Ścieżka do serii, uwzględniajac tylko p: <[p].npy>. np: Data\\batch\\[b_n1]"""
         self._type_batch: int | None = None
         """
         Informacja o typie serii.
@@ -56,11 +56,8 @@ class Batch():
             self.batch_info = batch_info
             """Seria zawierająca informacje o obrazach"""
             
-        
     def reset(self):
         self.__dict__.clear()
-    
-
 
     @property
     def type_batch(self) -> int:
@@ -84,7 +81,7 @@ class Batch():
         """Zwraca typ serii w postaci int
         
         :param str name: Typ serii
-        :return type_str: typ w postaci str"""
+        :return: Typ w postaci int"""
         type_batch = ''
         for char in name:
             if char.isdigit():
@@ -104,7 +101,7 @@ class Batch():
         """Zwraca typ serii w postaci str
         
         :param int type: Typ serii
-        :return type_str: typ w postaci str"""
+        :return type_str: Typ w postaci str"""
         match type:
             case -1:
                 type_str = 1
@@ -118,10 +115,10 @@ class Batch():
     
     @staticmethod
     def type_batch_to_path(type):
-        """Zwraca typ serii w postaci ścieżki
+        """Zwraca typ serii w postaci ścieżki wraz z prefiksem nazwy
 
         :param int type: Typ serii
-        :return type_str: typ w postaci ścieżki"""
+        :return: Typ w postaci ścieżki wraz z prefiksem nazwy"""
         match type:
             case -1:
                 path_f = 1
@@ -136,7 +133,7 @@ class Batch():
 
     def save_batch(self):
         """Tworzy nowe pliki serii i informacji o serii.
-        Jeśli obiekt nie ma nazwy to, tworzy nowe pliki wyszukujac dostępną nazwę.
+        Jeśli obiekt nie ma nazwy, to tworzy nowe pliki wyszukujac dostępną nazwę.
         """
         if self.name is None:
             self.name, self.batch_num = self.__find_available_filename()
