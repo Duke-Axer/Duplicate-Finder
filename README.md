@@ -11,15 +11,15 @@ Następnie można wykonywać program z: -an, -mnb, -c, -i
 -c - Wykonuje sprawdzenie zapisanych serii i kopiuje duplikaty z informacjami do katalogu 'Data\Duplicates'
 -i - Wyświetla informacje o programie
 
-**Struktura plików**
-.
-├── Data/
-│   ├── batch/
-│   ├── batch_archives/
-│   ├── Duplicates/
-│   ├── paths/
-│   └── settings.txt
-└── Duplicate Finder.exe
+**Struktura plików**<br>
+.<br>
+├── Data/<br>
+│   ├── batch/<br>
+│   ├── batch_archives/<br>
+│   ├── Duplicates/<br>
+│   ├── paths/<br>
+│   └── settings.txt<br>
+└── Duplicate Finder.exe<br>
 
 ## Wymagania
 - Python 3.8+
