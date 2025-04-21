@@ -9,7 +9,6 @@ folderList:list[str] = [settings.FolderName.data,
                         os.path.join(settings.FolderName.data, settings.FolderName.batchs),
                         os.path.join(settings.FolderName.data, settings.FolderName.archives_batch),
                         os.path.join(settings.FolderName.data, settings.FolderName.paths),
-                        os.path.join(settings.FolderName.data, settings.FolderName.tmp),
                         os.path.join(settings.FolderName.data, settings.FolderName.duplicates)]
 
 

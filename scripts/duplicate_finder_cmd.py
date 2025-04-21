@@ -16,6 +16,8 @@ def main():
         make_new_batchs()
     if arg.compare:
         compare()
+    if arg.info:
+        info()
 
 def make_new_batchs():
     """Tworzy nowe serie z nowych ścieżek"""
@@ -79,11 +81,16 @@ def add_new():
     catalog.search_new_file()
     print('\r\033[33mZakończono dodawanie ścieżek\033[0m')
 
+def info():
+    """Informacje o programie"""
+    print('Nazwa Programu: Duplicate Finder\nAutor: Brajan Gąbka\nE-mail: b.gabka.nkn@gmail.com\nWersja: 1.0')
+
 def cmd():
     parser = argparse.ArgumentParser(description="Przykład użycia argparse")
     parser.add_argument("-an", "--add_new", action='store_true', help="dodaje do listy znalezione nowe obrazy")
     parser.add_argument("-mnb" ,"--make_new_batchs", action='store_true', help="Tworzy nowe serie z nowych ścieżek")
     parser.add_argument("-c" ,"--compare", action='store_true', help="Sprawdza, czy występują duplikaty. Aktualizuje informacje o serii")
+    parser.add_argument("-i" ,"--info", action='store_true', help="Wyświetla informacje o programie")
     return parser.parse_args()
 
 main()
